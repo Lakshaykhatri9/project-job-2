@@ -9,6 +9,9 @@ export const useAppContext = () => {
     return useContext(AppContext)
 }
 
+const AUTH_STORAGE_KEY = "quickcart_user";
+const DEMO_PASSWORD = "password123";
+
 export const AppContextProvider = (props) => {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY
@@ -18,13 +21,42 @@ export const AppContextProvider = (props) => {
     const [userData, setUserData] = useState(false)
     const [isSeller, setIsSeller] = useState(true)
     const [cartItems, setCartItems] = useState({})
+    const [authReady, setAuthReady] = useState(false)
 
     const fetchProductData = async () => {
         setProducts(productsDummyData)
     }
 
+    const persistUser = (user) => {
+        setUserData(user)
+        if (typeof window !== "undefined") {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user))
+        }
+    }
+
+    const login = (email, password) => {
+        if (email === userDummyData.email && password === DEMO_PASSWORD) {
+            persistUser(userDummyData)
+            return true
+        }
+        return false
+    }
+
+    const logout = () => {
+        setUserData(false)
+        if (typeof window !== "undefined") {
+            localStorage.removeItem(AUTH_STORAGE_KEY)
+        }
+    }
+
     const fetchUserData = async () => {
-        setUserData(userDummyData)
+        if (typeof window === "undefined") return
+
+        const storedUser = localStorage.getItem(AUTH_STORAGE_KEY)
+        if (storedUser) {
+            setUserData(JSON.parse(storedUser))
+        }
+        setAuthReady(true)
     }
 
     const addToCart = async (itemId) => {
@@ -84,7 +116,7 @@ export const AppContextProvider = (props) => {
     const value = {
         currency, router,
         isSeller, setIsSeller,
-        userData, fetchUserData,
+        userData, authReady, login, logout, fetchUserData,
         products, fetchProductData,
         cartItems, setCartItems,
         addToCart, updateCartQuantity,

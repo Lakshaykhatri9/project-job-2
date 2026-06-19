@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { assets, orderDummyData } from "@/assets/assets";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -9,7 +10,8 @@ import Loading from "@/components/Loading";
 
 const MyOrders = () => {
 
-    const { currency } = useAppContext();
+    const { currency, userData, authReady } = useAppContext();
+    const router = useRouter();
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,8 +22,15 @@ const MyOrders = () => {
     }
 
     useEffect(() => {
+        if (!authReady) return;
+
+        if (!userData) {
+            router.replace("/sign-in");
+            return;
+        }
+
         fetchOrders();
-    }, []);
+    }, [authReady, userData, router]);
 
     return (
         <>
